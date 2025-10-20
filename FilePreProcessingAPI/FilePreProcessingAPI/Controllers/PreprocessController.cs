@@ -7,64 +7,62 @@
 */
 
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using System.Threading.Tasks;
+using FilePreProcessingAPI.Services;
 
-namespace FilePreprocessingAPI.Controllers
+namespace FilePreProcessingAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PreprocessController : ControllerBase
+    public class PreprocessorController : ControllerBase
     {
-        private readonly IWebHostEnvironment _env;
+        private readonly PdfProcessor _pdfProcessor;
 
-        public PreprocessController(IWebHostEnvironment env)
+        // Use dependency injection instead of new PdfProcessor()
+        public PreprocessorController(PdfProcessor pdfProcessor)
         {
-            _env = env;
+            _pdfProcessor = pdfProcessor;
         }
 
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadFile(IFormFile file)
+        /// <summary>
+        /// Accepts a PDF file upload and returns extracted text.
+        /// </summary>
+        /// <param name="file">The uploaded PDF file.</param>
+        /// <returns>Extracted text or error message.</returns>
+        [HttpPost("extract-pdf-text")]
+        public async Task<IActionResult> ExtractPdfText([FromForm] Microsoft.AspNetCore.Http.IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
 
-            string uploads = Path.Combine(_env.ContentRootPath, "Uploads");
-            if (!Directory.Exists(uploads))
-                Directory.CreateDirectory(uploads);
+            var tempFilePath = Path.GetTempFileName();
 
-            string filePath = Path.Combine(uploads, file.FileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            try
             {
-                await file.CopyToAsync(stream);
+                // Save uploaded PDF temporarily
+                using (var stream = new FileStream(tempFilePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Extract text from the saved PDF
+                var extractedText = await _pdfProcessor.ExtractTextAsync(tempFilePath);
+
+                return Ok(new { Text = extractedText });
             }
-
-            // --- Simple stub logic for now ---
-            string extractedText;
-            if (file.FileName.EndsWith(".pdf"))
+            catch (System.Exception ex)
             {
-                extractedText = "[Pretend PDF text extracted here]";
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
-            else if (file.FileName.EndsWith(".mp3") || file.FileName.EndsWith(".wav"))
+            finally
             {
-                extractedText = "[Pretend audio transcribed text here]";
+                // Clean up temp file
+                if (System.IO.File.Exists(tempFilePath))
+                {
+                    System.IO.File.Delete(tempFilePath);
+                }
             }
-            else
-            {
-                return BadRequest("Unsupported file type.");
-            }
-
-            string outputDir = Path.Combine(_env.ContentRootPath, "Outputs");
-            if (!Directory.Exists(outputDir))
-                Directory.CreateDirectory(outputDir);
-
-            string txtFile = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(file.FileName) + ".txt");
-            await System.IO.File.WriteAllTextAsync(txtFile, extractedText);
-
-            return Ok(new
-            {
-                message = "File processed successfully",
-                textFilePath = txtFile
-            });
         }
     }
 }
