@@ -1,4 +1,12 @@
-﻿namespace FilePreProcessingAPI.Services
+﻿/*
+ * Developer: Evan S.
+ * Date Created: 10/19/2025
+ * Last Updated: 10/19/2025
+ * Description: For CS 478 Team Project
+ *              This code extracts text from a pdf
+*/
+
+namespace FilePreProcessingAPI.Services
 {
     public class PdfProcessor
     {

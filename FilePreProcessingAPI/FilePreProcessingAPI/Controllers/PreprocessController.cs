@@ -1,4 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿/*
+ * Developer: Evan S.
+ * Date Created: 10/19/2025
+ * Last Updated: 10/19/2025
+ * Description: For CS 478 Team Project
+ *              This code is the controller for preprocessing
+*/
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace FilePreprocessingAPI.Controllers
 {
