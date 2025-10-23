@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+<hr />
+
+<h2>Upload PDF and extract text</h2>
+
+@if (ViewData["Message"] != null)
+{
+    <div class="alert alert-success">@ViewData["Message"]</div>
+    <p>Output file: <code>@ViewData["OutputFileName"]</code></p>
+    <p>Saved at (server path): <code>@ViewData["OutputFilePath"]</code></p>
+}
+
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+<form asp-action="Index" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label for="pdfFile" class="form-label">PDF file</label>
+        <input type="file" class="form-control" id="pdfFile" name="pdfFile" accept="application/pdf" />
+    </div>
+    <button type="submit" class="btn btn-primary">Upload and Extract</button>
+</form>
