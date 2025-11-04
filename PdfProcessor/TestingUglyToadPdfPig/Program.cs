@@ -2,8 +2,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
-// After WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+// Register application services
 builder.Services.AddSingleton<TestingUglyToadPdfPig.Services.IPdfTextService, TestingUglyToadPdfPig.Services.PdfTextService>();
 
 var app = builder.Build();
@@ -12,7 +13,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -23,8 +23,11 @@ app.UseRouting();
 
 app.UseAuthorization();
 
+// Map controller routes and Razor Pages
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapRazorPages();
 
 app.Run();
