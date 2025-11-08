@@ -8,3 +8,16 @@ __pycache__/
 *.bin
 .cache/
 
+# Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.pdb
+*.cache
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
