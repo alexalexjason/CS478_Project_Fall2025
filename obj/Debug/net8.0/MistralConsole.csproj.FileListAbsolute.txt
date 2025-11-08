@@ -1,0 +1,15 @@
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\bin\Debug\net8.0\MistralConsole.exe
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\bin\Debug\net8.0\MistralConsole.deps.json
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\bin\Debug\net8.0\MistralConsole.runtimeconfig.json
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\bin\Debug\net8.0\MistralConsole.dll
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\bin\Debug\net8.0\MistralConsole.pdb
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\MistralConsole.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\MistralConsole.AssemblyInfoInputs.cache
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\MistralConsole.AssemblyInfo.cs
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\MistralConsole.csproj.CoreCompileInputs.cache
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\MistralConsole.sourcelink.json
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\MistralConsole.dll
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\refint\MistralConsole.dll
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\MistralConsole.pdb
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\MistralConsole.genruntimeconfig.cache
+C:\Users\jason\source\repos\MistralConsole\MistralConsole\obj\Debug\net8.0\ref\MistralConsole.dll
