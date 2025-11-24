@@ -15,7 +15,7 @@ namespace WebApplication1.Database_Schema
         public FileStatus Status { get; set; } = FileStatus.Ready; // Ready, Deleted, Quarantined
         public string? Notes { get; set; }
 
-        public ApplicationUser Owner { get; set; } = default!;
+       // public ApplicationUser Owner { get; set; } = default!;
         public ICollection<TranscriptionJob> Jobs { get; set; } = new List<TranscriptionJob>();
     }
 }

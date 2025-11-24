@@ -29,6 +29,13 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
+
+                    <!-- Chat button placed in the navbar (site-wide) -->
+                    <div class="d-flex align-items-center">
+                        <button id="openChatbotBtn" class="btn btn-outline-primary btn-sm" type="button" aria-controls="chatbot-root">
+                            Open Chat
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -47,6 +54,39 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Place the chatbot partial once so the widget DOM exists (initially hidden) -->
+    <partial name="_ChatbotPartial" />
+
+    <!-- Lightweight lazy-loader: fetch chatbot.js only on first click -->
+    <script>
+        (function () {
+            const btn = document.getElementById('openChatbotBtn');
+            if (!btn) return;
+            let loaded = false;
+            btn.addEventListener('click', async function () {
+                try {
+                    if (!loaded) {
+                        await new Promise((resolve, reject) => {
+                            const s = document.createElement('script');
+                            s.src = '/js/chatbot.js';
+                            s.async = true;
+                            s.onload = resolve;
+                            s.onerror = reject;
+                            document.head.appendChild(s);
+                        });
+                        loaded = true;
+                    }
+                    if (window.Chatbot && typeof window.Chatbot.toggle === 'function') {
+                        window.Chatbot.toggle();
+                    }
+                } catch (err) {
+                    console.error('Failed to load chatbot script:', err);
+                }
+            });
+        })();
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

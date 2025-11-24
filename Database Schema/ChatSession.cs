@@ -10,7 +10,7 @@
         public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
         public DateTime? ArchivedUtc { get; set; }
 
-        public ApplicationUser Owner { get; set; } = default!;
+// public ApplicationUser Owner { get; set; } = default!;
         public UploadedFile? UploadedFile { get; set; }
         public TranscriptionJob? TranscriptionJob { get; set; }
         public ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();

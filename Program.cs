@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
 
 // configure Hugging Face options from configuration (appsettings or secrets)
 builder.Services.Configure<HuggingFaceOptions>(builder.Configuration.GetSection("HuggingFace"));
@@ -22,7 +23,7 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
-
+app.MapControllers();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

@@ -1,0 +1,25 @@
+﻿<div id="chatbot-root" class="chatbot-root hidden" aria-hidden="true">
+    <div class="chatbot-window" role="dialog" aria-label="Chatbot">
+        <header class="chatbot-header d-flex justify-content-between align-items-center">
+            <strong>Chatbot</strong>
+            <button id="chatbot-close" type="button" class="btn-close" aria-label="Close"></button>
+        </header>
+
+        <div id="chatbot-messages" class="chatbot-messages" role="log" aria-live="polite"></div>
+
+        <form id="chatbot-form" class="chatbot-form" onsubmit="return false;">
+            <input id="chatbot-input" type="text" placeholder="Ask a question..." autocomplete="off" class="form-control" />
+            <button id="chatbot-send" type="button" class="btn btn-primary ms-2">Send</button>
+        </form>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/chatbot.css" />
+<script>
+    // small boot entry for lazy loader: real logic lives in /js/chatbot.js
+    window._chatbotLazyReady = function() {
+      if (window.Chatbot && typeof window.Chatbot.init === 'function') {
+        window.Chatbot.init();
+      }
+    };
+</script>
