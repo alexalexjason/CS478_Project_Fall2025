@@ -1,82 +1,121 @@
 @page
 @model TestingUglyToadPdfPig.Pages.Voice.IndexModel
 @{
-    ViewData["Title"] = "Voice-to-Text";
+    ViewData["Title"] = "PDF + Voice";
 }
 
 <h2>@ViewData["Title"]</h2>
 
-<div class="mb-3">
-    <a class="btn btn-secondary" href="~/">Back to Home</a>
-    <button id="startBtn" class="btn btn-primary">Start</button>
-    <button id="stopBtn" class="btn btn-outline-primary" disabled>Stop</button>
-    <button id="saveBtn" class="btn btn-success" disabled>Save to server</button>
-</div>
-
-<div style="margin-top:12px;">
-    <div><strong>Hypothesis (interim):</strong></div>
-    <div id="hypothesis" style="min-height:1.2em; color: #666;"></div>
-</div>
-
-<div style="margin-top:12px;">
-    <div><strong>Final transcript:</strong></div>
-    <textarea id="finalText" rows="8" cols="80" readonly></textarea>
-</div>
-
-<form id="antiForgeryForm" method="post" style="display:none;">
+<form method="post" enctype="multipart/form-data" class="mb-4">
     @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label class="form-label">Upload PDF</label>
+        <input asp-for="PdfFile" type="file" accept="application/pdf" class="form-control" />
+        <span class="form-text">Optional — upload a PDF to extract text from pages.</span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Voice-to-text</label>
+        <div class="mb-2">
+            <button type="button" id="startBtn" class="btn btn-primary btn-sm">Start</button>
+            <button type="button" id="stopBtn" class="btn btn-outline-primary btn-sm" disabled>Stop</button>
+            <button type="button" id="saveBtn" class="btn btn-success btn-sm" disabled>Save Voice Only</button>
+            <span id="interim" class="text-muted ms-2"></span>
+        </div>
+        <textarea asp-for="VoiceText" id="finalText" class="form-control" rows="8">@Model.VoiceText</textarea>
+        <div class="form-text">Captured speech is appended to the text area. Click Process below to submit both PDF and voice text to the server.</div>
+    </div>
+
+    <div>
+        <button type="submit" class="btn btn-success">Process (PDF + Voice)</button>
+        <a class="btn btn-secondary" href="~/">Back to Home</a>
+    </div>
 </form>
 
-<script src="~/js/voice.js"></script>
-<script>
-    // wire UI to the voice script
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const hypEl = document.getElementById('hypothesis');
-    const finalEl = document.getElementById('finalText');
+@if (!string.IsNullOrWhiteSpace(Model.VoiceText))
+{
+    <section class="mt-4">
+        <h4>Captured voice text</h4>
+        <pre>@Model.VoiceText</pre>
+    </section>
+}
 
-    startBtn.addEventListener('click', () => {
-        if (!window.VoiceRecognition) {
-            alert('Speech recognition not supported in this browser. Use Chrome (desktop) or Edge.');
-            return;
+@if (Model.ExtractedPages != null && Model.ExtractedPages.Count > 0)
+{
+    <section class="mt-4">
+        <h4>Extracted PDF text (per page)</h4>
+        @for (int i = 0; i < Model.ExtractedPages.Count; i++)
+        {
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h6 class="card-title">Page @(i + 1)</h6>
+                    <pre class="mb-0">@Model.ExtractedPages[i]</pre>
+                </div>
+            </div>
         }
-        window.VoiceRecognition.start(
-            interim => hypEl.textContent = interim ?? '',
-            finalText => {
-                // append final result
-                finalEl.value += (finalEl.value ? "\n" : "") + finalText;
-                hypEl.textContent = '';
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/voice.js"></script>
+    <script>
+        (function () {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const interimSpan = document.getElementById('interim');
+            const textArea = document.getElementById('finalText');
+
+            function onInterim(text) {
+                interimSpan.textContent = text || '';
+            }
+
+            function onFinal(text) {
+                if (!text) return;
+                const current = textArea.value || '';
+                textArea.value = current + (current && !current.endsWith(' ') ? ' ' : '') + text + '\n';
+                interimSpan.textContent = '';
                 saveBtn.disabled = false;
             }
-        );
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-    });
 
-    stopBtn.addEventListener('click', () => {
-        window.VoiceRecognition.stop();
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-    });
+            startBtn.addEventListener('click', function () {
+                if (!window.VoiceRecognition) {
+                    alert('Voice recognition not supported in this browser. Use Chrome/Edge on desktop or localhost with HTTPS.');
+                    return;
+                }
+                window.VoiceRecognition.start(onInterim, onFinal);
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            });
 
-    saveBtn.addEventListener('click', async () => {
-        const text = finalEl.value;
-        if (!text) return;
+            stopBtn.addEventListener('click', function () {
+                if (window.VoiceRecognition) window.VoiceRecognition.stop();
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                interimSpan.textContent = '';
+            });
 
-        // get antiforgery token value
-        const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
-        const token = tokenInput ? tokenInput.value : '';
-        const form = new FormData();
-        form.append('__RequestVerificationToken', token);
-        form.append('text', text);
+            saveBtn.addEventListener('click', async function () {
+                const text = textArea.value;
+                if (!text) return;
 
-        const res = await fetch('?handler=Save', { method: 'POST', body: form });
-        if (res.ok) {
-            alert('Saved on server');
-            saveBtn.disabled = true;
-        } else {
-            alert('Save failed');
-        }
-    });
-</script>
+                // read antiforgery token from the page
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                const token = tokenInput ? tokenInput.value : '';
+
+                const form = new FormData();
+                form.append('__RequestVerificationToken', token);
+                form.append('text', text);
+
+                const res = await fetch('?handler=Save', { method: 'POST', body: form });
+                if (res.ok) {
+                    alert('Saved voice text on server');
+                    saveBtn.disabled = true;
+                } else {
+                    alert('Save failed');
+                }
+            });
+        })();
+    </script>
+}
