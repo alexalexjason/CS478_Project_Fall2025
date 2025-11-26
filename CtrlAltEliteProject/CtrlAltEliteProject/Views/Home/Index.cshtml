@@ -1,0 +1,15 @@
+﻿@{
+
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Choose a tool below.</p>
+
+    <p class="mt-4">
+        <a asp-page="/Pdf/Index" class="btn btn-primary btn-lg" role="button">PDF to Text</a>
+        <a asp-page="/Voice/Index" class="btn btn-secondary btn-lg ms-2" role="button">Voice to Text</a>
+    </p>
+</div>

@@ -1,0 +1,82 @@
+﻿@page
+@model CtrlAltEliteProject.Pages.Voice.IndexModel
+@{
+    ViewData["Title"] = "Voice-to-Text";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="mb-3">
+    <a class="btn btn-secondary" href="~/">Back to Home</a>
+    <button id="startBtn" class="btn btn-primary">Start</button>
+    <button id="stopBtn" class="btn btn-outline-primary" disabled>Stop</button>
+    <button id="saveBtn" class="btn btn-success" disabled>Save to server</button>
+</div>
+
+<div style="margin-top:12px;">
+    <div><strong>Hypothesis (interim):</strong></div>
+    <div id="hypothesis" style="min-height:1.2em; color: #666;"></div>
+</div>
+
+<div style="margin-top:12px;">
+    <div><strong>Final transcript:</strong></div>
+    <textarea id="finalText" rows="8" cols="80" readonly></textarea>
+</div>
+
+<form id="antiForgeryForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<script src="~/js/voice.js"></script>
+<script>
+    // wire UI to the voice script
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const hypEl = document.getElementById('hypothesis');
+    const finalEl = document.getElementById('finalText');
+
+    startBtn.addEventListener('click', () => {
+        if (!window.VoiceRecognition) {
+            alert('Speech recognition not supported in this browser. Use Chrome (desktop) or Edge.');
+            return;
+        }
+        window.VoiceRecognition.start(
+            interim => hypEl.textContent = interim ?? '',
+            finalText => {
+                // append final result
+                finalEl.value += (finalEl.value ? "\n" : "") + finalText;
+                hypEl.textContent = '';
+                saveBtn.disabled = false;
+            }
+        );
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+    });
+
+    stopBtn.addEventListener('click', () => {
+        window.VoiceRecognition.stop();
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+    });
+
+    saveBtn.addEventListener('click', async () => {
+        const text = finalEl.value;
+        if (!text) return;
+
+        // get antiforgery token value
+        const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+        const token = tokenInput ? tokenInput.value : '';
+        const form = new FormData();
+        form.append('__RequestVerificationToken', token);
+        form.append('text', text);
+
+        const res = await fetch('?handler=Save', { method: 'POST', body: form });
+        if (res.ok) {
+            alert('Saved on server');
+            saveBtn.disabled = true;
+        } else {
+            alert('Save failed');
+        }
+    });
+</script>
