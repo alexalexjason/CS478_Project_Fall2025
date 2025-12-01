@@ -13,6 +13,7 @@
 
         public GeminiService(IConfiguration config, HttpClient http)
         {
+            // Reads from appsettings.json
             _apiKey = config["GoogleGemini:ApiKey"];
             _http = http;
         }
@@ -27,13 +28,13 @@
                 {
                     contents = new[]
                     {
-                    new {
-                        parts = new[]
-                        {
-                            new { text = userInput }
+                        new {
+                            parts = new[]
+                            {
+                                new { text = userInput }
+                            }
                         }
                     }
-                }
                 };
 
                 var response = await _http.PostAsJsonAsync(url, payload);
@@ -42,17 +43,14 @@
                     return $"Error: {response.StatusCode}";
 
                 var json = await response.Content.ReadAsStringAsync();
-
                 using var doc = JsonDocument.Parse(json);
 
-                // Extract text from response
-                var resultText =
-                    doc.RootElement
-                        .GetProperty("candidates")[0]
-                        .GetProperty("content")
-                        .GetProperty("parts")[0]
-                        .GetProperty("text")
-                        .GetString();
+                var resultText = doc.RootElement
+                                    .GetProperty("candidates")[0]
+                                    .GetProperty("content")
+                                    .GetProperty("parts")[0]
+                                    .GetProperty("text")
+                                    .GetString();
 
                 return resultText ?? "[EMPTY RESPONSE]";
             }
