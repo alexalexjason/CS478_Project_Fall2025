@@ -1,0 +1,355 @@
+﻿@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Chatbot";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3 text-center">Chatbot</h2>
+
+    @using (Html.BeginForm("SendMessage", "Home", FormMethod.Post, new { id = "antiforgeryForm", style = "display:none" }))
+    {
+        @Html.AntiForgeryToken()
+    }
+
+    <div class="row">
+        <!-- Conversations menu -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <strong>Conversations</strong>
+                    <button id="newChatBtn" class="btn btn-sm btn-outline-primary" title="New chat">New chat</button>
+                </div>
+                <ul id="conversationsList" class="list-group list-group-flush" style="max-height:520px; overflow:auto;">
+                    <!-- JS -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Chat area -->
+        <div class="col-md-9 d-flex flex-column">
+            <div id="chatWindow" class="border rounded p-3 bg-light mb-3 flex-grow-1" style="min-height:420px; max-height:68vh; overflow-y:auto;" role="log" aria-live="polite"></div>
+
+            <!-- Layout: textarea | Send button | File input -->
+            <div class="d-flex gap-2 align-items-start">
+                <textarea id="messageInput" class="form-control flex-grow-1" placeholder="Type your message..." rows="1" style="resize:none; min-height:42px; max-height:160px;"></textarea>
+
+                <button id="sendBtn" class="btn btn-primary" style="white-space:nowrap;">Send</button>
+
+                <input id="fileInput" type="file" accept="application/pdf" class="form-control form-control-sm" style="width:220px;" aria-label="Upload PDF" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .conversation-item {
+        cursor: pointer;
+    }
+
+        .conversation-item.active {
+            background: #e9f0ff;
+        }
+
+    .conversation-meta {
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .conversation-delete {
+        visibility: hidden;
+    }
+
+    .conversation-item:hover .conversation-delete {
+        visibility: visible;
+    }
+</style>
+
+<style>
+    .bubble {
+        padding: .6rem .9rem;
+        border-radius: .75rem;
+        max-width: 78%;
+        word-wrap: break-word;
+    }
+
+    .msg {
+        margin: .4rem 0;
+        display: flex;
+    }
+
+        .msg.user {
+            justify-content: flex-end;
+        }
+
+        .msg.bot {
+            justify-content: flex-start;
+        }
+
+        .msg.user .bubble {
+            background: #0b5fff;
+            color: #fff;
+            border-bottom-right-radius: .25rem;
+        }
+
+        .msg.bot .bubble {
+            background: #fff;
+            border: 1px solid #e6e6e6;
+            color: #111;
+            border-bottom-left-radius: .25rem;
+        }
+</style>
+
+@section Scripts {
+    <script>
+        (() => {
+            // Config / DOM refs
+            const STORAGE_KEY = 'chat_conversations_v1';
+            const sendUrl = '@Url.Action("SendMessage", "Home")';
+            const uploadUrl = '@Url.Action("UploadFile", "Home")'; 
+
+            const chatWindow = document.getElementById('chatWindow');
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const fileInput = document.getElementById('fileInput');
+            const newChatBtn = document.getElementById('newChatBtn');
+            const convList = document.getElementById('conversationsList');
+
+            // Stores conversation in localStorage
+            let conversations = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            let currentId = null;
+
+            // UI helpers 
+            function scrollBottom() {
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+
+            function appendMessage(text, who) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'msg ' + (who === 'user' ? 'user' : 'bot');
+
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.textContent = text;
+
+                wrapper.appendChild(bubble);
+                chatWindow.appendChild(wrapper);
+                scrollBottom();
+            }
+
+            function setTyping(on) {
+                const existing = document.querySelector('.chat-typing');
+                if (!on) { if (existing) existing.remove(); return; }
+                if (!existing) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'msg bot chat-typing';
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+                    bubble.textContent = 'Typing...';
+                    wrapper.appendChild(bubble);
+                    chatWindow.appendChild(wrapper);
+                    scrollBottom();
+                }
+            }
+
+            function getAntiforgeryToken() {
+                const tokenInput = document.querySelector('#antiforgeryForm input[name="__RequestVerificationToken"]');
+                return tokenInput ? tokenInput.value : '';
+            }
+
+            // local fallback and server comms 
+            async function sendToServer(message) {
+                const token = getAntiforgeryToken();
+                const payload = { message };
+                const opts = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(payload)
+                };
+
+                const res = await fetch(sendUrl, opts);
+                if (!res.ok) throw new Error('server responded ' + res.status);
+                return await res.json();
+            }
+
+            function generateLocalReply(message) {
+                if (!message) return "Please send a message.";
+                const m = message.trim().toLowerCase();
+                if (m.includes('hello') || m.includes('hi')) return "Hi! This is a demo bot. How can I help?";
+                if (m.includes('time')) return "Server time: " + new Date().toLocaleString();
+                if (m.includes('help')) return "Try asking about the project, sending 'time', or say 'hello'.";
+                return `You said: "${message}" (demo reply)`;
+            }
+
+            // save conversation
+            function saveConversations() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+            }
+
+            function renderConversationsList() {
+                convList.innerHTML = '';
+                conversations.forEach(c => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item conversation-item d-flex justify-content-between align-items-start';
+                    li.dataset.id = c.id;
+                    li.innerHTML = `<div><strong>${c.title || 'Conversation'}</strong><div class="conversation-meta">${new Date(c.updated).toLocaleString()}</div></div>
+                                    <button class="btn btn-sm btn-link conversation-delete" title="Delete">✕</button>`;
+                    li.addEventListener('click', () => loadConversation(c.id));
+                    li.querySelector('.conversation-delete').addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        deleteConversation(c.id);
+                    });
+                    if (currentId === c.id) li.classList.add('active');
+                    convList.appendChild(li);
+                });
+            }
+
+            function createConversation() {
+                const id = 'c_' + Date.now();
+                const conv = { id, title: 'New chat', messages: [], updated: Date.now() };
+                conversations.unshift(conv);
+                currentId = id;
+                saveConversations();
+                renderConversationsList();
+                loadConversation(id);
+            }
+
+            function deleteConversation(id) {
+                conversations = conversations.filter(c => c.id !== id);
+                if (currentId === id) currentId = conversations.length ? conversations[0].id : null;
+                saveConversations();
+                renderConversationsList();
+                if (currentId) loadConversation(currentId); else chatWindow.innerHTML = '';
+            }
+
+            function loadConversation(id) {
+                const conv = conversations.find(c => c.id === id);
+                if (!conv) return;
+                currentId = id;
+                chatWindow.innerHTML = '';
+                conv.messages.forEach(m => appendMessage(m.text, m.who));
+                renderConversationsList();
+            }
+
+            function pushMessageToConversation(who, text) {
+                if (!currentId) createConversation();
+                const conv = conversations.find(c => c.id === currentId);
+                if (!conv) return;
+                conv.messages.push({ who, text, ts: Date.now() });
+                conv.updated = Date.now();
+                conv.title = conv.messages.find(m => m.who === 'user')?.text?.slice(0, 30) || 'Conversation';
+                saveConversations();
+                renderConversationsList();
+            }
+
+            // main send flow 
+            async function sendMessage() {
+                const text = input.value.trim();
+                if (!text) return;
+                appendMessage(text, 'user');
+                pushMessageToConversation('user', text);
+                input.value = '';
+                input.style.height = 'auto';
+                sendBtn.disabled = true;
+                setTyping(true);
+
+                // try server
+                if (sendUrl && sendUrl.trim() !== '') {
+                    try {
+                        const payload = await sendToServer(text);
+                        setTyping(false);
+                        const reply = payload && (payload.reply ?? payload.result ?? payload.message ?? null);
+                        const replyText = reply ?? JSON.stringify(payload);
+                        appendMessage(replyText, 'bot');
+                        pushMessageToConversation('bot', replyText);
+                        sendBtn.disabled = false;
+                        input.focus();
+                        return;
+                    } catch (err) {
+                        // if server failed, fall back to local
+                        setTyping(false);
+                        appendMessage("(server unavailable, using local demo)", "bot");
+                        pushMessageToConversation('bot', "(server unavailable, using local demo)");
+                    }
+                }
+
+                // fallback local
+                setTyping(false);
+                const local = generateLocalReply(text);
+                appendMessage(local, 'bot');
+                pushMessageToConversation('bot', local);
+                sendBtn.disabled = false;
+                input.focus();
+            }
+
+            // events
+            input.addEventListener('input', () => {
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            sendBtn.addEventListener('click', sendMessage);
+
+            newChatBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                createConversation();
+            });
+
+            fileInput.addEventListener('change', async (ev) => {
+                const f = ev.target.files && ev.target.files[0];
+                if (!f) return;
+                appendMessage(`(Uploaded file: ${f.name})`, 'user');
+                pushMessageToConversation('user', `(Uploaded file: ${f.name})`);
+
+                // Can upload file to server if there's an UploadFile endpoint
+                if (uploadUrl && uploadUrl.trim() !== '') {
+                    try {
+                        const token = getAntiforgeryToken();
+                        const form = new FormData();
+                        form.append('file', f);
+                        const res = await fetch(uploadUrl, {
+                            method: 'POST',
+                            headers: { 'RequestVerificationToken': token },
+                            body: form
+                        });
+                        if (!res.ok) throw new Error('upload failed ' + res.status);
+                        const result = await res.json();
+                        appendMessage('(File processed by server)', 'bot');
+                        pushMessageToConversation('bot', '(File processed by server)');
+                    } catch (err) {
+                        appendMessage('(File upload failed, continuing locally)', 'bot');
+                        pushMessageToConversation('bot', '(File upload failed)');
+                    }
+                }
+                // Clear file input 
+                fileInput.value = '';
+            });
+
+            // init
+            if (!conversations.length) createConversation();
+            else {
+                // select first conversation by default
+                currentId = conversations[0].id;
+                renderConversationsList();
+                loadConversation(currentId);
+            }
+
+            // initial greeting 
+            const conv = conversations.find(c => c.id === currentId);
+            if (conv && conv.messages.length === 0) {
+                const greeting = 'Hello — I am a demo chatbot. Type a message to begin.';
+                appendMessage(greeting, 'bot');
+                pushMessageToConversation('bot', greeting);
+            }
+        })();
+    </script>
+}

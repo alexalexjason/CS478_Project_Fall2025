@@ -1,0 +1,56 @@
+﻿@page
+@model CtrlAltEliteProject.Pages.Pdf.IndexModel
+@{
+    ViewData["Title"] = "PDF to Text";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (TempData["SavedFiles"] is string saved)
+{
+    var fileName = System.IO.Path.GetFileName(saved);
+    <div class="alert alert-success">
+        <div>Output file: <strong>@fileName</strong></div>
+        <div>Saved at (server path): <code>@saved</code></div>
+    </div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@e.ErrorMessage</div>
+        }
+    </div>
+}
+
+<form method="post" enctype="multipart/form-data" class="mb-4">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label asp-for="PdfFile" class="form-label">PDF file</label>
+        <input asp-for="PdfFile" type="file" name="PdfFile" accept="application/pdf" class="form-control" />
+    </div>
+
+    <!-- No handler! Uses OnPost() -->
+    <button type="submit" class="btn btn-primary">Upload and Extract</button>
+    <a class="btn btn-secondary ms-2" href="~/">Back to Home</a>
+</form>
+
+@if (Model.ExtractedPages != null && Model.ExtractedPages.Count > 0)
+{
+    <section class="mt-4">
+        <h4>Extracted PDF text (per page)</h4>
+
+        @for (int i = 0; i < Model.ExtractedPages.Count; i++)
+        {
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h6 class="card-title">Page @(i + 1)</h6>
+                    <pre class="mb-0">@Model.ExtractedPages[i]</pre>
+                </div>
+            </div>
+        }
+    </section>
+}
