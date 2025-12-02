@@ -1,0 +1,99 @@
+﻿--- Page 1 ---
+Page 1 of 4 
+Git + Github Exercises 
+Git vs Github 
+Git is a distributed revision control system. 
+GitHub is a web-based Git repository hosting service. (BitBucket is another web site that offers
+git hosting.) GitHub offers both public free accounts and paid plans for private repositories 
+GitHub takes version control a step further by facilitating social coding. GitHub makes it easy
+to contribute to other projects or accept contributes to a project you started. GitHub is located on
+the web at github.com.
+If you don’t already have an account at github, create one now. The free account option is
+sufficient for this exercise.
+There are GUI clients for using git, but the advantage of using the command line is:
+1. It doesn’t change. Different GUI clients fall in and out of favor and how a GUI client
+works can change from one version to another.
+2. All major GUI clients also offer a command line option.
+3. To debug a problem from a GUI interface, it helps to know the git command being
+issued.
+To check if you have git install on Ubuntu (https://www.atlassian.com/git/tutorials/install-git
+):
+1. Open a terminal
+2. Type git in the terminal, if you see a usage page, then you have git installed
+3. If not, you can install git on Ubuntu by the following commands ($ is not part of the
+command)
+$sudo apt-get update
+$sudo apt-get install git 
+Lab Demo Procedure
+1. Show me you have put a project on GitHub under your name. (50 points)
+2. Show me how to clone a team project from GitHub, and make at least one code commit.
+(50 points)
+Submission
+You can book a meeting with me and do a demo (for 10 minutes). Or, submit a link that
+contains a demo recording (less than 10 minutes) with verbal comments in the Blackboard.
+Not acceptable submission format: any email or any attachment, any video file, any zipped
+file, a screenshot in the Blackboard. 
+
+--- Page 2 ---
+Page 2 of 4 
+!!!You will receive 0 credit if you submit anything other than a link as mentioned above.!!!
+Please check the Blackboard for the due date. No submission is accepted after the due date. 
+Exercise 2 – Putting a project on GitHub
+This exercise will show you how to put a local project on GitHub.
+• Creating a repository on github.com
+• Committing and syncing (or pushing) changes to github
+Step 1. In this example, the project is called HelloWorld
+Step 2. Create a repository on GitHub of the same name. I recommend adding a README file
+and .gitignore file.
+Step 3. Use git client to clone repository just created:
+git clone https://github.com/ReplaceWithYourProject.git
+Step 4. Copy existing project files into folder/repository you just cloned.
+Step 5. Add, commit, and push your changes:
+git add -A
+git commit -m "short description of change"
+git push 
+[git add . and git add –A are equivalent in git version 2: 
+] 
+
+--- Page 3 ---
+Page 3 of 4 
+Exercise 3 – Cloning an existing repository (from your team GitHub repository)
+Oftentimes the git repository will already exist on a remote server. The common scenario is you
+join a project and want to modify existing documents or upload new ones. In cases like this, you
+(1) create a local copy or clone of the repository, (2) add/modify existing documents. (3) push
+your changes back to the central or upstream repository.
+In this exercise, you will clone a repository, make a change to an existing file, and upload or
+push your changes back to the server. 
+Contact your team lead to add you as a collaborator (Settings->Manage access->Invite a
+collaborator) 
+See this link for different access permissions. 
+Open one of the git shells (command line tools) you downloaded above. 
+Get the URL to the remote repository (your team project) you want to clone.
+The clone command will create a new directory for the cloned project. cd to the directory where
+you want to create the new repository. Clone the remote repository with:
+$ git clone https://github.com/<Team_Account_Name>/TeamProject.git 
+To find the URL for your team project. 
+The command above will create a new subdirectory TeamProject and initialize it with the remote
+repository. Use the command cd (change directory) into the new directory:
+$ cd TeamProject
+Verify if the clone command created remote references to the remote repository: 
+
+--- Page 4 ---
+Page 4 of 4 
+$ git remote –v
+Modify one of the downloaded files or add a new file to the directory (you may choose any text
+editor you prefer, “vi/vim” is used below):
+$ vi newfile or if “newfile” does not exist $ echo “new file contents” > newfile
+$ git add newfile
+$ git commit –m ‘practice changes’
+To push your changes to the remote server:
+$ git push
+Browse github.com to verify new changes were uploaded correctly.
+When you clone a repository with git clone, it automatically creates a remote connection called
+origin pointing back to the cloned repository. You can verify this with the following command:
+$ git remote -v
+As time goes on others may push their changes to the central repository. On a regular basis you
+should update your local copy with changes made on the central repository:
+$ git pull origin master main
+The default branch is changed from “master” to “main”. 
+
