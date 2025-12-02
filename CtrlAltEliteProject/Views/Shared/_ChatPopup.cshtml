@@ -1,0 +1,26 @@
+@* Reusable chat popup partial. Include on pages where you want the global chat UI. *@
+<button id="globalChatBtn" class="btn btn-info" aria-label="Open chat" style="position:fixed; right:20px; bottom:20px; z-index:1040;">
+    Chat
+</button>
+
+<div id="chatPopup" class="chat-popup" aria-hidden="true" role="dialog" aria-label="Chat with assistant" style="display:none;">
+    <div class="chat-header">
+        <span>Assistant</span>
+        <button id="chatCloseBtn" class="btn-close" aria-label="Close chat">&times;</button>
+    </div>
+    <div class="chat-body" id="chatMessages" tabindex="0" aria-live="polite"></div>
+    <div class="chat-controls">
+        <label class="form-check form-check-inline mb-0" title="Include page transcript when sending">
+            <input id="includeTranscript" class="form-check-input" type="checkbox" />
+            <span class="form-check-label">Include transcript</span>
+        </label>
+        <textarea id="chatInput" class="form-control" rows="2" placeholder="Type a message..."></textarea>
+        <div class="d-flex mt-2">
+            <button id="chatSendBtn" class="btn btn-primary me-2">Send</button>
+            <button id="chatClearBtn" class="btn btn-outline-secondary">Clear</button>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/chatpopup.css" />
+<script src="~/js/chatpopup.js"></script>

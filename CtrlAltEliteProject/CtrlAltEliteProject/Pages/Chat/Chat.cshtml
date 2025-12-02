@@ -1,0 +1,26 @@
+﻿@page
+@model WebApplication1.Pages.ChatModel
+@{
+    ViewData["Title"] = "Chat (Hugging Face)";
+}
+
+<div class="container" style="max-width:800px;margin-top:24px;">
+    <h2>Chat Bot (Hugging Face)</h2>
+
+    <div id="chatWindow" style="border:1px solid #ccc;padding:12px;height:360px;overflow:auto;background:#fafafa;">
+    </div>
+
+    <form id="chatForm" method="post" asp-page-handler="Send" style="margin-top:12px;">
+        @Html.AntiForgeryToken()
+        <div class="mb-2">
+            <textarea id="messageInput" name="message" class="form-control" rows="2" placeholder="Type a message..."></textarea>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/chat-hf.js"></script>
+}

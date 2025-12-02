@@ -7,9 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using CtrlAltEliteProject.Services;
+using CtrlAltEliteProject.Services.Logging;
 
 namespace CtrlAltEliteProject.Pages.Pdf
 {
@@ -18,12 +20,14 @@ namespace CtrlAltEliteProject.Pages.Pdf
         private readonly IWebHostEnvironment _env;
         private readonly IPdfTextService _pdfTextService;
         private readonly ILogger<IndexModel> _logger;
+        private readonly IUserQueryLogger _queryLogger;
 
-        public IndexModel(IWebHostEnvironment env, IPdfTextService pdfTextService, ILogger<IndexModel> logger)
+        public IndexModel(IWebHostEnvironment env, IPdfTextService pdfTextService, ILogger<IndexModel> logger, IUserQueryLogger queryLogger)
         {
             _env = env;
             _pdfTextService = pdfTextService;
             _logger = logger;
+            _queryLogger = queryLogger;
         }
 
         [BindProperty]
@@ -83,6 +87,31 @@ namespace CtrlAltEliteProject.Pages.Pdf
                 System.IO.File.WriteAllText(outPath, sb.ToString(), Encoding.UTF8);
 
                 TempData["SavedFiles"] = outPath;
+
+                // Log interaction as JSON
+                try
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var combinedText = string.Join("\n\n---PAGE---\n\n", ExtractedPages ?? Array.Empty<string>());
+                    var record = new InteractionRecord
+                    {
+                        UserId = userId,
+                        Source = "pdf",
+                        Input = new { fileName = PdfFile.FileName, textExtracted = combinedText },
+                        Output = outPath,
+                        Metadata = new Dictionary<string, object?> { ["pageCount"] = ExtractedPages?.Count ?? 0 }
+                    };
+
+                    var savedJsonPath = await _queryLogger.LogAsync(record);
+                    if (!string.IsNullOrEmpty(savedJsonPath))
+                    {
+                        _logger.LogDebug("Saved interaction JSON: {path}", savedJsonPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to log PDF interaction; continuing.");
+                }
             }
             catch (Exception ex)
             {

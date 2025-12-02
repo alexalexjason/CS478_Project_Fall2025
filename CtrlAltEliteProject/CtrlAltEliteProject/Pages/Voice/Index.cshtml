@@ -28,55 +28,6 @@
 </form>
 
 <script src="~/js/voice.js"></script>
-<script>
-    // wire UI to the voice script
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const hypEl = document.getElementById('hypothesis');
-    const finalEl = document.getElementById('finalText');
 
-    startBtn.addEventListener('click', () => {
-        if (!window.VoiceRecognition) {
-            alert('Speech recognition not supported in this browser. Use Chrome (desktop) or Edge.');
-            return;
-        }
-        window.VoiceRecognition.start(
-            interim => hypEl.textContent = interim ?? '',
-            finalText => {
-                // append final result
-                finalEl.value += (finalEl.value ? "\n" : "") + finalText;
-                hypEl.textContent = '';
-                saveBtn.disabled = false;
-            }
-        );
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-    });
-
-    stopBtn.addEventListener('click', () => {
-        window.VoiceRecognition.stop();
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-    });
-
-    saveBtn.addEventListener('click', async () => {
-        const text = finalEl.value;
-        if (!text) return;
-
-        // get antiforgery token value
-        const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
-        const token = tokenInput ? tokenInput.value : '';
-        const form = new FormData();
-        form.append('__RequestVerificationToken', token);
-        form.append('text', text);
-
-        const res = await fetch('?handler=Save', { method: 'POST', body: form });
-        if (res.ok) {
-            alert('Saved on server');
-            saveBtn.disabled = true;
-        } else {
-            alert('Save failed');
-        }
-    });
-</script>
+@* Include chat popup for this page *@
+@await Html.PartialAsync("~/Views/Shared/_ChatPopup.cshtml")

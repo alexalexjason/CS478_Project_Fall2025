@@ -3,16 +3,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.IO;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using CtrlAltEliteProject.Services.Logging;
 
 namespace CtrlAltEliteProject.Pages.Voice
 {
     public class IndexModel : PageModel
     {
         private readonly IWebHostEnvironment _env;
+        private readonly IUserQueryLogger _queryLogger;
 
-        public IndexModel(IWebHostEnvironment env)
+        public IndexModel(IWebHostEnvironment env, IUserQueryLogger queryLogger)
         {
             _env = env;
+            _queryLogger = queryLogger;
         }
 
         public void OnGet()
@@ -20,7 +25,7 @@ namespace CtrlAltEliteProject.Pages.Voice
         }
 
         // Handles POST from JS fetch form-data: ?handler=Save
-        public IActionResult OnPostSave(string text)
+        public async Task<IActionResult> OnPostSave(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
@@ -37,7 +42,26 @@ namespace CtrlAltEliteProject.Pages.Voice
                 var fileName = $"voice_{DateTime.UtcNow:yyyyMMddHHmmss}.txt";
                 var path = Path.Combine(folder, fileName);
 
-                System.IO.File.WriteAllText(path, text);
+                await System.IO.File.WriteAllTextAsync(path, text);
+
+                // Attempt to log the interaction
+                try
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var record = new InteractionRecord
+                    {
+                        UserId = userId,
+                        Source = "audio",
+                        Input = new { transcript = text },
+                        Output = path
+                    };
+
+                    var savedJsonPath = await _queryLogger.LogAsync(record);
+                }
+                catch
+                {
+                    // Swallow to avoid breaking the response; logging is best-effort
+                }
 
                 // Return saved path for debugging; remove/sanitize in production
                 return new JsonResult(new { success = true, savedTo = path });
