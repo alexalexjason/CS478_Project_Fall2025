@@ -1,15 +1,13 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
+using CtrlAltEliteProject.Models;
 using CtrlAltEliteProject.Services.Logging;
 
 namespace CtrlAltEliteProject.Pages.Chat
 {
-    [Authorize]
     public class SendModel : PageModel
     {
         private readonly IUserQueryLogger _queryLogger;
@@ -26,11 +24,14 @@ namespace CtrlAltEliteProject.Pages.Chat
                 return BadRequest(new { error = "Message is required." });
             }
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = Request.Cookies["UserId"] ?? Guid.NewGuid().ToString();
+            if (!Request.Cookies.ContainsKey("UserId"))
+            {
+                Response.Cookies.Append("UserId", userId);
+            }
 
             try
             {
-                // Log the chat message
                 var record = new InteractionRecord
                 {
                     UserId = userId,
@@ -44,8 +45,6 @@ namespace CtrlAltEliteProject.Pages.Chat
 
                 await _queryLogger.LogAsync(record);
 
-                // TODO: Integrate your actual chatbot AI here
-                // For now, return a simulated response
                 var botReply = await SimulatedBotReplyAsync(message, transcript);
 
                 return new JsonResult(new { success = true, reply = botReply });

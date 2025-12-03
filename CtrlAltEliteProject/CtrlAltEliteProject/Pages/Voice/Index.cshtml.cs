@@ -6,6 +6,7 @@ using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CtrlAltEliteProject.Services.Logging;
+using CtrlAltEliteProject.Models;
 
 namespace CtrlAltEliteProject.Pages.Voice
 {
@@ -56,7 +57,7 @@ namespace CtrlAltEliteProject.Pages.Voice
                         Output = path
                     };
 
-                    var savedJsonPath = await _queryLogger.LogAsync(record);
+                    await _queryLogger.LogAsync(record);
                 }
                 catch
                 {

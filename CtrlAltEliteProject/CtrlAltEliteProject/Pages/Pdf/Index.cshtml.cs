@@ -2,14 +2,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using CtrlAltEliteProject.Models;
 using CtrlAltEliteProject.Services;
 using CtrlAltEliteProject.Services.Logging;
 
@@ -19,14 +17,12 @@ namespace CtrlAltEliteProject.Pages.Pdf
     {
         private readonly IWebHostEnvironment _env;
         private readonly IPdfTextService _pdfTextService;
-        private readonly ILogger<IndexModel> _logger;
         private readonly IUserQueryLogger _queryLogger;
 
-        public IndexModel(IWebHostEnvironment env, IPdfTextService pdfTextService, ILogger<IndexModel> logger, IUserQueryLogger queryLogger)
+        public IndexModel(IWebHostEnvironment env, IPdfTextService pdfTextService, IUserQueryLogger queryLogger)
         {
             _env = env;
             _pdfTextService = pdfTextService;
-            _logger = logger;
             _queryLogger = queryLogger;
         }
 
@@ -91,7 +87,12 @@ namespace CtrlAltEliteProject.Pages.Pdf
                 // Log interaction as JSON
                 try
                 {
-                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var userId = Request.Cookies["UserId"] ?? Guid.NewGuid().ToString();
+                    if (!Request.Cookies.ContainsKey("UserId"))
+                    {
+                        Response.Cookies.Append("UserId", userId);
+                    }
+
                     var combinedText = string.Join("\n\n---PAGE---\n\n", ExtractedPages ?? Array.Empty<string>());
                     var record = new InteractionRecord
                     {
@@ -102,20 +103,15 @@ namespace CtrlAltEliteProject.Pages.Pdf
                         Metadata = new Dictionary<string, object?> { ["pageCount"] = ExtractedPages?.Count ?? 0 }
                     };
 
-                    var savedJsonPath = await _queryLogger.LogAsync(record);
-                    if (!string.IsNullOrEmpty(savedJsonPath))
-                    {
-                        _logger.LogDebug("Saved interaction JSON: {path}", savedJsonPath);
-                    }
+                    await _queryLogger.LogAsync(record);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to log PDF interaction; continuing.");
+                    ModelState.AddModelError(string.Empty, "Failed to log interaction: " + ex.Message);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "PDF extraction failed.");
                 ModelState.AddModelError(string.Empty,
                     "Failed to extract or save PDF: " + ex.Message);
             }

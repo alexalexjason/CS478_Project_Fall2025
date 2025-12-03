@@ -26,6 +26,15 @@
                             <!-- updated action name to Blank -->
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Blank">Blank</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-page="/ExtractedText/Index">History</a>
+                        </li>
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/History/Index">Chat History</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

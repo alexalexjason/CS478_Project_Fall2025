@@ -1,12 +1,12 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using CtrlAltEliteProject.Models;
 
 namespace CtrlAltEliteProject.Services.Logging
 {
     public interface IUserQueryLogger
     {
-        /// <summary>
-        /// Logs an interaction record to a JSON file and returns the full saved path (or empty string on failure).
-        /// </summary>
-        Task<string> LogAsync(InteractionRecord record);
+        Task LogAsync(InteractionRecord record);
+        Task<List<InteractionRecord>> GetAllRecordsAsync();
     }
 }

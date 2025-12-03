@@ -1,0 +1,61 @@
+﻿--- Page 1 ---
+CS 379 – Programming Languages | Studio 4 – Parameter Passing 
+Overview
+In this studio, you will extend your existing Mini-Interpreter to support parameter passing
+by reference.
+So far, all your functions pass arguments by value—each parameter receives a separate
+copy of its argument.
+Your goal is to enable a new mode where a function can declare parameters as references
+using the ref keyword.
+When called with ref, a function can modify the caller’s variable directly. 
+Learning Objectives
+• Distinguish between call-by-value and call-by-reference.
+• Extend your existing parser to recognize ref parameters.
+• Modify your interpreter to correctly handle reference semantics for variables and
+array elements.
+• Test your interpreter with pytest from the command line.
+• Explain how reference variables interact with the environment and call stack. 
+Setup
+Use the interpreter you have built through Studios 1 – 3.
+Make sure it successfully runs the previous studio tests (functions, scope, return values).
+You will now add support for reference parameters.
+Testing may be done using pytest from the terminal. 
+Part A — Grammar & Parser
+1. Open your interpreter and locate the Parser class.
+2. Inside the function method, find where parameters are parsed. You should see logic
+similar to: 
+
+--- Page 2 ---
+if self.match('REF'): is_ref = True
+ident = self.consume('IDENT', 'Expected parameter name')
+params.append((is_ref, ident))
+3. Verify that your parser correctly detects the 'ref' keyword and records each
+parameter as a tuple (is_ref, token).
+4. No lexer edits are needed—REF should already be defined as a keyword.
+5. If you prefer modularity, you may move this code into a helper method like
+parse_param() and call it from inside function(). 
+Part B — Interpreter & Runtime Behavior
+1. Open your UserFunction.call method.
+2. Ensure that reference parameters bind directly to Reference objects rather than
+values:
+for (is_ref, tok), arg in zip(self.params, args):    
+if is_ref:        
+if not isinstance(arg, (Reference, ArrayIndexRef)):            
+raise TypeError('ref parameter needs variable or arr[i]')        
+local.define(tok.lexeme, arg)    
+else:        
+local.define(tok.lexeme, arg)
+3. In your Interpreter.evaluate method, find the section that handles Call
+expressions.
+4. Verify that when a callee’s parameter is marked ref, the corresponding argument is
+wrapped as a Reference or ArrayIndexRef object before invocation.
+5. Confirm that normal arguments (without ref) continue to pass values by copy. 
+Part C — Testing Your Interpreter 
+
+--- Page 3 ---
+You will validate your implementation with pytest.
+From your project directory (where your interpreter file resides), run:
+pytest -v test_s4_ref_vs_value.py  
+Each test checks a different behavior of your parameter-passing logic.
+All must pass before submission.  
+

@@ -1,0 +1,64 @@
+﻿--- Page 1 ---
+Operating Systems — Exam Cheat Sheet
+(Page 1 of 2)
+CPU Scheduling (CH5)
+Goals: ↑CPU util, ↑throughput, ↓turnaround, ↓waiting, ↓response
+FCFS: Nonpreemptive, convoy effect (long job blocks short)
+SJF: Optimal avg waiting; estimate burst via exponential avg.
+SRTF: Preemptive SJF; preempt on shorter remaining time.
+RR: Time quantum q; small q→responsive, large q→FCFS; good for time-sharing.
+Priority: Highest priority first; starvation→aging.
+Dispatcher: Performs context switch, mode switch; NOT policy.
+Processes & Threads (CH3–4)
+PCB: PID, state, PC, registers, scheduling info, memory info, open files.
+States: New, Ready, Running, Waiting, Terminated.
+fork() creates child (copy of parent); exec() replaces process image; wait() parent waits for child.
+Zombie: child finished, parent not waited (entry remains in process table).
+Orphan: parent exits; child adopted by init (or similar).
+Threads: within same process share code/data/files; own stack & registers.
+Models: 1:1 (kernel threads), M:1 (user-level), M:N (hybrid); processor affinity binds to CPU.
+Interprocess Communication (IPC)
+Shared Memory: Very fast; processes map same region; requires synchronization
+(mutex/semaphore).
+Message Passing: send/receive primitives; direct (P to P) or indirect (mailboxes).
+Buffering: Zero capacity (rendezvous), bounded, unbounded; affects blocking behaviour.
+Deadlocks & Resource Allocation Graphs (CH8)
+Deadlock conditions (Coffman): Mutual exclusion, hold-and-wait, no preemption, circular wait.
+RAG: Processes=circles, resources=boxes. Edge P→R (request), R→P (assignment).
+Single instance per resource: cycle in RAG ⇔ deadlock. Multiple instances: cycle ⇒ possible
+deadlock.
+Parallelism & Concurrency
+Concurrency: Multiple tasks make progress (possibly on one CPU).
+Parallelism: Truly simultaneous execution on ≥2 cores.
+Amdahl's Law: Speedup S = 1 / ((1−P) + P/N); serial fraction (1−P) limits maximum speedup.
+Deadlock Handling Strategies (CH8)
+Prevention: structurally negate at least one Coffman condition (e.g., require all resources at once to
+avoid hold-and-wait; allow preemption; total ordering of resource types).
+Avoidance (Banker's Algorithm): Only grant requests that leave system in safe state. Need[i] =
+Max[i] − Alloc[i]; simulate allocation and check for safe sequence.
+Detection & Recovery: Periodically run detection (wait-for graph); if cycle, preempt/rollback/kill
+processes.
+
+--- Page 2 ---
+Operating Systems — Exam Cheat Sheet
+(Page 2 of 2)
+Synchronization (CH6)
+Critical Section Requirements: Mutual exclusion, Progress, Bounded waiting.
+Peterson's Algorithm (2 threads): uses shared flag[2] & turn.
+Mutex Locks: acquire()/release(); easy but susceptible to busy-waiting.
+Semaphores: integer S with queue. wait(P): S--, block if S<0. signal(V): S++, wake if S<=0.
+Liveness issues: deadlock, starvation, priority inversion; fix with priority inheritance.
+Classic Synchronization Problems (CH7)
+Bounded Buffer (Producer–Consumer): N slots; semaphores empty=N, full=0, mutex=1.
+Producer: wait(empty); wait(mutex); add item; signal(mutex); signal(full).
+Consumer: wait(full); wait(mutex); remove item; signal(mutex); signal(empty).
+Readers–Writers: Readers share read lock, writers need exclusive lock. RW1 favors readers; RW2
+favors writers (no starvation policy).
+Dining Philosophers: N philosophers + N forks (chopsticks). Each needs left & right fork to eat;
+naive solution can deadlock (everyone grabs left fork).
+Avoidance ideas: allow at most N−1 philosophers at table, impose total ordering on forks, or use a
+waiter process to grant forks.
+
+--- Page 3 ---
+
+

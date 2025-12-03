@@ -1,0 +1,127 @@
+@page
+@model CtrlAltEliteProject.Pages.ExtractedText.IndexModel
+@{
+    ViewData["Title"] = "Extracted Text History";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1>Extracted Text History</h1>
+            <p class="text-muted">View all previously extracted texts from PDF and voice inputs</p>
+        </div>
+    </div>
+
+    @if (Model.Records.Count == 0)
+    {
+        <div class="alert alert-info" role="alert">
+            <strong>No extracted texts yet.</strong> Upload a PDF or record audio to get started.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var record in Model.Records.OrderByDescending(r => r.Timestamp))
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1">
+                                        @if (record.Source == "pdf")
+                                        {
+                                            <i class="fas fa-file-pdf"></i>
+                                            <text> PDF Extract</text>
+                                        }
+                                        else if (record.Source == "audio")
+                                        {
+                                            <i class="fas fa-microphone"></i>
+                                            <text> Voice Transcript</text>
+                                        }
+                                        else if (record.Source == "chat")
+                                        {
+                                            <i class="fas fa-comments"></i>
+                                            <text> Chat Message</text>
+                                        }
+                                        else
+                                        {
+                                            <text>@record.Source</text>
+                                        }
+                                    </h5>
+                                    <small class="text-light">@record.Timestamp.ToString("g")</small>
+                                </div>
+                                <span class="badge bg-light text-dark">@record.Source</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @if (record.Input != null)
+                            {
+                                <div class="mb-3">
+                                    <strong>Input:</strong>
+                                    <div class="text-break" style="max-height: 200px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                                        @{
+                                            var inputText = record.Input.ToString();
+                                            if (inputText.Length > 500)
+                                            {
+                                                @Html.Raw(System.Net.WebUtility.HtmlEncode(inputText.Substring(0, 500)))
+                                                <text>...</text>
+                                            }
+                                            else
+                                            {
+                                                @Html.Raw(System.Net.WebUtility.HtmlEncode(inputText))
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            @if (record.Metadata != null && record.Metadata.ContainsKey("pageCount"))
+                            {
+                                <div class="mb-2">
+                                    <small class="text-muted"><strong>Pages:</strong> @record.Metadata["pageCount"]</small>
+                                </div>
+                            }
+
+                            @if (record.Metadata != null && record.Metadata.ContainsKey("transcriptLength"))
+                            {
+                                <div class="mb-2">
+                                    <small class="text-muted"><strong>Length:</strong> @record.Metadata["transcriptLength"] characters</small>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(record.UserId))
+                            {
+                                <div class="mb-2">
+                                    <small class="text-muted"><strong>User ID:</strong> @record.UserId</small>
+                                </div>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(record.Output?.ToString()))
+                        {
+                            <div class="card-footer bg-light">
+                                <small class="text-muted">
+                                    <strong>Output:</strong> @record.Output
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-header h5 {
+        margin: 0;
+    }
+</style>
